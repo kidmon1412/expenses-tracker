@@ -25,3 +25,12 @@ export function monthRangeStr(monthStr: string): { start: string; end: string } 
   const end = nextMonth > 11 ? ymd(year + 1, 0, 1) : ymd(year, nextMonth, 1);
   return { start, end };
 }
+
+// Inclusive [start, end] range for a "YYYY-MM" value, for reports.
+export function monthInclusiveRange(monthValue: string): { start: string; end: string } {
+  const [y, m] = monthValue.split("-").map(Number);
+  const start = ymd(y, m - 1, 1);
+  const lastDay = new Date(y, m, 0).getDate();
+  const end = ymd(y, m - 1, lastDay);
+  return { start, end };
+}

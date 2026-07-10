@@ -1,0 +1,37 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { fetchReportData } from "@/lib/server/report-data";
+import { buildReportCsv } from "@/lib/server/report-csv";
+import { buildReportPdf } from "@/lib/server/report-pdf";
+
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const { data: report, error } = await supabase.from("reports").select("*").eq("id", id).single();
+
+  if (error || !report) {
+    return NextResponse.json({ error: "Report could not be generated. Try again." }, { status: 404 });
+  }
+
+  const summary = await fetchReportData(supabase, report.period_start, report.period_end);
+  const filename = `expense-report-${report.period_start}-to-${report.period_end}.${report.format}`;
+
+  if (report.format === "csv") {
+    const csv = buildReportCsv(summary);
+    return new NextResponse(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  }
+
+  const pdfBuffer = await buildReportPdf(summary);
+  return new NextResponse(new Uint8Array(pdfBuffer), {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    },
+  });
+}

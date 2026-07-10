@@ -16,11 +16,19 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl space-y-8 p-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Expenses Tracker</h1>
-        <p className="text-sm text-neutral-500">
-          Track spending, hit your savings goals, and stay under budget.
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Expenses Tracker</h1>
+          <p className="text-sm text-neutral-500">
+            Track spending, hit your savings goals, and stay under budget.
+          </p>
+        </div>
+        <a
+          href="/reports"
+          className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+        >
+          Reports
+        </a>
       </header>
 
       <AlertBanner alerts={data.alerts} />
