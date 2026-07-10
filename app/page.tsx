@@ -9,6 +9,7 @@ import { SavingsSection } from "@/components/dashboard/SavingsSection";
 import { AddTransactionForm } from "@/components/dashboard/AddTransactionForm";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { getSubscriptionState } from "@/lib/server/subscription";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 export const dynamic = "force-dynamic";
 
@@ -31,13 +32,39 @@ export default async function DashboardPage() {
             Track spending, hit your savings goals, and stay under budget.
           </p>
         </div>
-        <a
-          href="/reports"
-          className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-        >
-          Reports
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="/reports"
+            className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+          >
+            Reports
+          </a>
+          {user ? (
+            <LogoutButton />
+          ) : (
+            <>
+              <a
+                href="/login"
+                className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              >
+                Log in
+              </a>
+              <a
+                href="/signup"
+                className="whitespace-nowrap rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800"
+              >
+                Sign up
+              </a>
+            </>
+          )}
+        </div>
       </header>
+
+      {user && (
+        <p className="-mt-6 text-xs text-neutral-500">
+          Signed in as {user.email}
+        </p>
+      )}
 
       <TrialBanner state={subState} />
       <AlertBanner alerts={data.alerts} />
