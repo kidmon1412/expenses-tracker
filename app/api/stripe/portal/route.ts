@@ -5,27 +5,25 @@ import { NextResponse } from "next/server";
 /**
  * POST /api/stripe/portal
  *
- * Redirects the authenticated user to the Stripe Billing Portal where they
- * can manage their subscription, update payment method, cancel, etc.
+ * Redirects to the Stripe Billing Portal for the demo/current subscription
+ * so it can be managed, cancelled, or have its payment method updated.
  */
 export async function POST(request: Request) {
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json({ error: "Stripe isn't configured yet." }, { status: 503 });
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const subQuery = supabase.from("subscriptions").select("*").order("created_at", { ascending: false }).limit(1);
+    const { data: subs } = user ? await subQuery.eq("user_id", user.id) : await subQuery.is("user_id", null);
+    const subscription = subs?.[0];
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("stripe_customer_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.stripe_customer_id) {
+    if (!subscription?.stripe_customer_id || subscription.stripe_customer_id === "demo_customer_seed") {
       return NextResponse.json(
         { error: "No billing account found. Subscribe first." },
         { status: 404 },
@@ -35,8 +33,8 @@ export async function POST(request: Request) {
     const origin = request.headers.get("origin") ?? process.env.NEXT_PUBLIC_APP_URL ?? "";
 
     const portalSession = await createPortalSession({
-      customerId: profile.stripe_customer_id,
-      returnUrl: `${origin}/dashboard`,
+      customerId: subscription.stripe_customer_id,
+      returnUrl: `${origin}/`,
     });
 
     return NextResponse.json({ url: portalSession.url });

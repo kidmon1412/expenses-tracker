@@ -3,10 +3,23 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchReportData } from "@/lib/server/report-data";
 import { buildReportCsv } from "@/lib/server/report-csv";
 import { buildReportPdf } from "@/lib/server/report-pdf";
+import { canExport, getSubscriptionState } from "@/lib/server/subscription";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const subState = await getSubscriptionState(supabase, user?.id ?? null);
+  if (!canExport(subState)) {
+    return NextResponse.json(
+      { error: "Your trial has ended. Upgrade to continue exporting reports.", upgradeRequired: true },
+      { status: 403 },
+    );
+  }
 
   const { data: report, error } = await supabase.from("reports").select("*").eq("id", id).single();
 

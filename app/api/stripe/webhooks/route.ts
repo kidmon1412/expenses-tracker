@@ -6,7 +6,9 @@ import type Stripe from "stripe";
 /**
  * POST /api/stripe/webhooks
  *
- * Receives and processes Stripe webhook events.
+ * Receives and processes Stripe webhook events, updating this app's
+ * `subscriptions` table (see docs/DATA_MODEL.md — not the vibe-stack
+ * template's `profiles`/`purchases` tables, which don't exist here).
  * Register this URL in your Stripe dashboard:
  *   https://dashboard.stripe.com/webhooks → add endpoint → /api/stripe/webhooks
  *
@@ -36,30 +38,21 @@ export async function POST(request: Request) {
 
   try {
     switch (event.type) {
-      // ── New subscription or one-time purchase ─────────────────────────────
+      // ── Checkout completed — link the Stripe customer to our subscription row ──
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const userId = session.metadata?.userId;
-        if (!userId) break;
+        const subscriptionRowId = session.metadata?.subscriptionRowId;
+        if (!subscriptionRowId || !session.customer) break;
 
-        // Store Stripe customer ID on profile for future portal/checkout calls
-        if (session.customer) {
-          await supabase
-            .from("profiles")
-            .update({ stripe_customer_id: session.customer as string })
-            .eq("id", userId);
-        }
-
-        // If subscription, the subscription.updated event will handle status
-        if (session.mode === "payment") {
-          await supabase.from("purchases").upsert({
-            user_id: userId,
-            stripe_customer_id: session.customer,
-            stripe_session_id: session.id,
-            amount_total: session.amount_total,
-            status: "paid",
-          });
-        }
+        await supabase
+          .from("subscriptions")
+          .update({
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id:
+              typeof session.subscription === "string" ? session.subscription : null,
+            status: "active",
+          })
+          .eq("id", subscriptionRowId);
         break;
       }
 
@@ -67,19 +60,15 @@ export async function POST(request: Request) {
       case "customer.subscription.updated":
       case "customer.subscription.created": {
         const sub = event.data.object as Stripe.Subscription;
-        const userId = sub.metadata?.userId;
-        if (!userId) break;
+        const status = sub.status === "active" || sub.status === "trialing" ? "active" : sub.status;
 
-        await supabase.from("subscriptions").upsert({
-          id: sub.id,
-          user_id: userId,
-          stripe_customer_id: sub.customer as string,
-          status: sub.status,
-          price_id: sub.items.data[0]?.price.id,
-          current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-          cancel_at_period_end: sub.cancel_at_period_end,
-          updated_at: new Date().toISOString(),
-        });
+        await supabase
+          .from("subscriptions")
+          .update({
+            status,
+            current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+          })
+          .eq("stripe_subscription_id", sub.id);
         break;
       }
 
@@ -88,16 +77,15 @@ export async function POST(request: Request) {
         const sub = event.data.object as Stripe.Subscription;
         await supabase
           .from("subscriptions")
-          .update({ status: "canceled", updated_at: new Date().toISOString() })
-          .eq("id", sub.id);
+          .update({ status: "cancelled" })
+          .eq("stripe_subscription_id", sub.id);
         break;
       }
 
-      // ── Payment failed — notify user ──────────────────────────────────────
+      // ── Payment failed — leave status as-is, log for now ──────────────────
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         console.warn("[stripe/webhooks] payment failed for customer:", invoice.customer);
-        // TODO: send email via Supabase Edge Function or Resend
         break;
       }
 

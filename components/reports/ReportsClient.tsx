@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Report, ReportFormat } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import { monthInclusiveRange } from "@/lib/date";
@@ -16,11 +17,13 @@ function GenerateReportForm({ onGenerated }: { onGenerated: () => void }) {
   const [format, setFormat] = useState<ReportFormat>("pdf");
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [upgradeRequired, setUpgradeRequired] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("submitting");
     setError(null);
+    setUpgradeRequired(false);
     try {
       const { start, end } = monthInclusiveRange(month);
       const res = await fetch("/api/reports/generate", {
@@ -28,9 +31,15 @@ function GenerateReportForm({ onGenerated }: { onGenerated: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ period_start: start, period_end: end, format }),
       });
+      const data = await res.json();
+      if (res.status === 403 && data.upgradeRequired) {
+        setStatus("error");
+        setUpgradeRequired(true);
+        setError(data.error);
+        return;
+      }
       if (!res.ok) throw new Error("failed");
-      const { downloadUrl } = await res.json();
-      window.location.href = downloadUrl;
+      window.location.href = data.downloadUrl;
       setStatus("idle");
       onGenerated();
     } catch {
@@ -70,7 +79,19 @@ function GenerateReportForm({ onGenerated }: { onGenerated: () => void }) {
           {status === "submitting" ? "Generating…" : "Generate report"}
         </button>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-600">
+          {error}
+          {upgradeRequired && (
+            <>
+              {" "}
+              <Link href="/upgrade" className="font-medium underline">
+                Upgrade now
+              </Link>
+            </>
+          )}
+        </p>
+      )}
     </form>
   );
 }

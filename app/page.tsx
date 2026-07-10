@@ -7,12 +7,20 @@ import { AlertBanner } from "@/components/dashboard/AlertBanner";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { SavingsSection } from "@/components/dashboard/SavingsSection";
 import { AddTransactionForm } from "@/components/dashboard/AddTransactionForm";
+import { TrialBanner } from "@/components/dashboard/TrialBanner";
+import { getSubscriptionState } from "@/lib/server/subscription";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const data = await fetchDashboardData(supabase);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const [data, subState] = await Promise.all([
+    fetchDashboardData(supabase),
+    getSubscriptionState(supabase, user?.id ?? null),
+  ]);
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl space-y-8 p-6">
@@ -31,6 +39,7 @@ export default async function DashboardPage() {
         </a>
       </header>
 
+      <TrialBanner state={subState} />
       <AlertBanner alerts={data.alerts} />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">

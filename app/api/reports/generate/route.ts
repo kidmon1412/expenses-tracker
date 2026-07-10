@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { canExport, getSubscriptionState } from "@/lib/server/subscription";
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +22,14 @@ export async function POST(request: Request) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
+    const subState = await getSubscriptionState(supabase, user?.id ?? null);
+    if (!canExport(subState)) {
+      return NextResponse.json(
+        { error: "Your trial has ended. Upgrade to continue exporting reports.", upgradeRequired: true },
+        { status: 403 },
+      );
+    }
 
     const { data: report, error } = await supabase
       .from("reports")
