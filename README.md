@@ -1,41 +1,44 @@
-# vibe-stack-supabase
+# Expenses Tracker
 
-Next.js 15 + Supabase starter for shipping vibe-coded apps fast. Clone, provision, build.
+A personal expense tracker that logs cash and online transactions, categorises spending,
+monitors savings targets, and generates exportable reports — with a free trial and paid tier.
+
+See [docs/PRD.md](docs/PRD.md) for the product plan and [docs/TASKS.md](docs/TASKS.md) for the
+sprint breakdown this app was built against.
 
 ## Stack
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 15 (App Router, React 19, Server Actions) |
+| Framework | Next.js 15 (App Router, React 19) |
 | Language | TypeScript strict |
 | Styles | Tailwind CSS v4 (CSS-first, no config file) |
-| Auth + DB | Supabase (`@supabase/ssr`) |
-| Package manager | Bun |
+| Auth + DB | Supabase (`@supabase/ssr`), Postgres + RLS |
+| Payments | Stripe Checkout + webhooks |
+| Reports | `@react-pdf/renderer` (PDF), streamed CSV |
 | Deploy | Vercel |
 
 ## Quick start
 
 ```bash
-bun install
-cp .env.example .env.local   # fill in your Supabase keys
-bun dev
+npm install
+vercel link
+vercel env pull .env.local
+npm run dev
 ```
 
-Open http://localhost:3000. Edit `app/page.tsx` to start building.
+Open http://localhost:3000 — the dashboard shows demo seed data with no login required.
 
-## Provisioning a new project
+## Database
 
-Use the `/new-vibe-project <name>` skill (see `claude-dotfiles` repo) which:
-1. Clones this template and renames it
-2. Creates a new GitHub repo and pushes
-3. Creates a Supabase project and injects URL + anon key
-4. Creates a Vercel project linked to the GitHub repo
-5. Triggers first deploy and returns the preview URL
+Schema lives in `supabase/migrations/`. Apply with the Supabase CLI:
+
+```bash
+supabase login
+supabase link --project-ref <your-project-ref>
+supabase db push
+```
 
 ## Working with AI
 
-See [CLAUDE.md](CLAUDE.md) for conventions. This repo is pre-wired for gstack — start with `/office-hours`.
-
-## Switching to Neon
-
-If you need Postgres without Supabase (e.g. prefer Drizzle ORM + Clerk for auth), a `vibe-stack-neon` variant is planned. For now: fork this and swap `@supabase/ssr` for `drizzle-orm` + `@neondatabase/serverless`, add Clerk or NextAuth.
+See [CLAUDE.md](CLAUDE.md) for build conventions.
