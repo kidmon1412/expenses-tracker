@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "C:\\Users\\Kenny Low\\Expenses Tracker\\.claude\\dev-with-path.cmd"],
+      "port": 3000
+    }
+  ]
+}

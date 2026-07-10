@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git config *)",
+      "Bash(npm -v)",
+      "Bash(vercel --version)",
+      "Bash(supabase --version)",
+      "PowerShell(node -v)",
+      "PowerShell(npm -v)",
+      "PowerShell(npx --version)",
+      "PowerShell(vercel --version)",
+      "PowerShell(supabase --version)",
+      "PowerShell(Get-Command winget -ErrorAction SilentlyContinue)",
+      "PowerShell(winget --version 2>&1)",
+      "PowerShell(winget install OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements)"
+    ]
+  }
+}
