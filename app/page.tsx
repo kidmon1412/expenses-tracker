@@ -3,9 +3,9 @@ import { fetchDashboardData } from "@/lib/server/dashboard-data";
 import { formatCurrency } from "@/lib/format";
 import { StatTile } from "@/components/dashboard/StatTile";
 import { TransactionList } from "@/components/dashboard/TransactionList";
-import { SavingsTargetCard } from "@/components/dashboard/SavingsTargetCard";
 import { AlertBanner } from "@/components/dashboard/AlertBanner";
-import { BudgetList } from "@/components/dashboard/BudgetList";
+import { BudgetSection } from "@/components/dashboard/BudgetSection";
+import { SavingsSection } from "@/components/dashboard/SavingsSection";
 import { AddTransactionForm } from "@/components/dashboard/AddTransactionForm";
 
 export const dynamic = "force-dynamic";
@@ -46,22 +46,12 @@ export default async function DashboardPage() {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-neutral-900">Budgets this month</h2>
-        <BudgetList budgetUsage={data.budgetUsage} />
+        <BudgetSection budgetUsage={data.budgetUsage} categories={data.categories} />
       </section>
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-neutral-900">Savings targets</h2>
-        {data.savingsTargets.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-neutral-300 p-6 text-center">
-            <p className="text-neutral-500">Create a savings goal to get started.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {data.savingsTargets.map((target) => (
-              <SavingsTargetCard key={target.id} target={target} />
-            ))}
-          </div>
-        )}
+        <SavingsSection savingsTargets={data.savingsTargets} />
       </section>
     </main>
   );
