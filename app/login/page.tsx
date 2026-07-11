@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
@@ -26,7 +27,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/");
+    router.push(searchParams.get("next") || "/");
     router.refresh();
   }
 
@@ -74,11 +75,14 @@ export default function LoginPage() {
           Sign up
         </Link>
       </p>
-      <p className="text-center">
-        <Link href="/" className="text-sm text-neutral-500 hover:underline">
-          ← Continue viewing the demo
-        </Link>
-      </p>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

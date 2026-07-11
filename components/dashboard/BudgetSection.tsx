@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { BudgetUsage, Category } from "@/lib/types";
 import { formatCurrency } from "@/lib/format";
 
-function BudgetCard({ usage }: { usage: BudgetUsage }) {
+function BudgetCard({ usage, currency }: { usage: BudgetUsage; currency?: string }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [limit, setLimit] = useState(String(usage.budget.limit_amount));
@@ -87,7 +87,7 @@ function BudgetCard({ usage }: { usage: BudgetUsage }) {
           ) : (
             <>
               <span className="text-neutral-500">
-                {formatCurrency(usage.spent)} / {formatCurrency(usage.budget.limit_amount)}
+                {formatCurrency(usage.spent, currency)} / {formatCurrency(usage.budget.limit_amount, currency)}
               </span>
               <button
                 onClick={() => setEditing(true)}
@@ -200,9 +200,11 @@ function AddBudgetForm({
 export function BudgetSection({
   budgetUsage,
   categories,
+  currency,
 }: {
   budgetUsage: BudgetUsage[];
   categories: Category[];
+  currency?: string;
 }) {
   const usedCategoryIds = budgetUsage.map((u) => u.budget.category_id);
 
@@ -213,7 +215,7 @@ export function BudgetSection({
           <p className="text-neutral-500">Set a budget to track your limits.</p>
         </div>
       ) : (
-        budgetUsage.map((u) => <BudgetCard key={u.budget.id} usage={u} />)
+        budgetUsage.map((u) => <BudgetCard key={u.budget.id} usage={u} currency={currency} />)
       )}
       <AddBudgetForm categories={categories} usedCategoryIds={usedCategoryIds} />
     </div>

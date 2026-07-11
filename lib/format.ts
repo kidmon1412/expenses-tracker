@@ -1,7 +1,10 @@
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-GB", {
+import { DEFAULT_CURRENCY } from "@/lib/currencies";
+
+export function formatCurrency(amount: number, currency: string = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(undefined, {
     style: "currency",
-    currency: "GBP",
+    currency,
+    currencyDisplay: "symbol",
   }).format(amount);
 }
 

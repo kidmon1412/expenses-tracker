@@ -7,8 +7,8 @@ function escapeCsvField(value: string): string {
   return value;
 }
 
-export function buildReportCsv(summary: ReportSummary): string {
-  const header = ["Date", "Type", "Category", "Channel", "Amount", "Note"];
+export function buildReportCsv(summary: ReportSummary, currency: string): string {
+  const header = ["Date", "Type", "Category", "Channel", `Amount (${currency})`, "Note"];
   const lines = [header.join(",")];
 
   for (const row of summary.rows) {

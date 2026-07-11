@@ -24,7 +24,7 @@ function trackStatus(target: SavingsTarget): { label: string; tone: string } {
   return { label: "On track", tone: "bg-emerald-100 text-emerald-700" };
 }
 
-function SavingsCard({ target }: { target: SavingsTarget }) {
+function SavingsCard({ target, currency }: { target: SavingsTarget; currency?: string }) {
   const router = useRouter();
   const [contribution, setContribution] = useState("");
   const [busy, setBusy] = useState(false);
@@ -81,7 +81,7 @@ function SavingsCard({ target }: { target: SavingsTarget }) {
         </div>
       </div>
       <p className="mt-1 text-sm text-neutral-500">
-        {formatCurrency(target.current_amount)} / {formatCurrency(target.target_amount)}
+        {formatCurrency(target.current_amount, currency)} / {formatCurrency(target.target_amount, currency)}
         {target.deadline ? ` · by ${formatDate(target.deadline)}` : ""}
       </p>
       <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-neutral-100">
@@ -194,7 +194,13 @@ function AddSavingsTargetForm() {
   );
 }
 
-export function SavingsSection({ savingsTargets }: { savingsTargets: SavingsTarget[] }) {
+export function SavingsSection({
+  savingsTargets,
+  currency,
+}: {
+  savingsTargets: SavingsTarget[];
+  currency?: string;
+}) {
   return (
     <div className="space-y-3">
       {savingsTargets.length === 0 ? (
@@ -204,7 +210,7 @@ export function SavingsSection({ savingsTargets }: { savingsTargets: SavingsTarg
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {savingsTargets.map((target) => (
-            <SavingsCard key={target.id} target={target} />
+            <SavingsCard key={target.id} target={target} currency={currency} />
           ))}
         </div>
       )}

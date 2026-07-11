@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { fetchDashboardData } from "@/lib/server/dashboard-data";
 import { formatCurrency } from "@/lib/format";
+import { getPreferredCurrency } from "@/lib/server/currency";
 import { StatTile } from "@/components/dashboard/StatTile";
 import { TransactionList } from "@/components/dashboard/TransactionList";
 import { AlertBanner } from "@/components/dashboard/AlertBanner";
@@ -10,6 +11,7 @@ import { AddTransactionForm } from "@/components/dashboard/AddTransactionForm";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { getSubscriptionState } from "@/lib/server/subscription";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { CurrencySelector } from "@/components/dashboard/CurrencySelector";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +20,10 @@ export default async function DashboardPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const [data, subState] = await Promise.all([
+  const [data, subState, currency] = await Promise.all([
     fetchDashboardData(supabase),
     getSubscriptionState(supabase, user?.id ?? null),
+    getPreferredCurrency(),
   ]);
 
   return (
@@ -33,30 +36,14 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <CurrencySelector currency={currency} />
           <a
             href="/reports"
             className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
           >
             Reports
           </a>
-          {user ? (
-            <LogoutButton />
-          ) : (
-            <>
-              <a
-                href="/login"
-                className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-              >
-                Log in
-              </a>
-              <a
-                href="/signup"
-                className="whitespace-nowrap rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800"
-              >
-                Sign up
-              </a>
-            </>
-          )}
+          <LogoutButton />
         </div>
       </header>
 
@@ -70,11 +57,15 @@ export default async function DashboardPage() {
       <AlertBanner alerts={data.alerts} />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatTile label="Spent this month" value={formatCurrency(data.totals.totalSpentThisMonth)} tone="negative" />
-        <StatTile label="Total saved" value={formatCurrency(data.totals.totalSaved)} tone="positive" />
+        <StatTile
+          label="Spent this month"
+          value={formatCurrency(data.totals.totalSpentThisMonth, currency)}
+          tone="negative"
+        />
+        <StatTile label="Total saved" value={formatCurrency(data.totals.totalSaved, currency)} tone="positive" />
         <StatTile
           label="Remaining budget"
-          value={data.totals.hasBudgets ? formatCurrency(data.totals.remainingBudget) : "—"}
+          value={data.totals.hasBudgets ? formatCurrency(data.totals.remainingBudget, currency) : "—"}
         />
       </section>
 
@@ -85,17 +76,17 @@ export default async function DashboardPage() {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-neutral-900">Transactions</h2>
-        <TransactionList transactions={data.transactions} categories={data.categories} />
+        <TransactionList transactions={data.transactions} categories={data.categories} currency={currency} />
       </section>
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-neutral-900">Budgets this month</h2>
-        <BudgetSection budgetUsage={data.budgetUsage} categories={data.categories} />
+        <BudgetSection budgetUsage={data.budgetUsage} categories={data.categories} currency={currency} />
       </section>
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-neutral-900">Savings targets</h2>
-        <SavingsSection savingsTargets={data.savingsTargets} />
+        <SavingsSection savingsTargets={data.savingsTargets} currency={currency} />
       </section>
     </main>
   );

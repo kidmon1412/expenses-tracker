@@ -4,9 +4,11 @@ import { formatCurrency, formatDate } from "@/lib/format";
 export function TransactionList({
   transactions,
   categories,
+  currency,
 }: {
   transactions: Transaction[];
   categories: Category[];
+  currency?: string;
 }) {
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
@@ -42,7 +44,7 @@ export function TransactionList({
               className={`font-semibold ${isExpense ? "text-red-600" : "text-emerald-600"}`}
             >
               {isExpense ? "-" : "+"}
-              {formatCurrency(Number(t.amount))}
+              {formatCurrency(Number(t.amount), currency)}
             </span>
           </li>
         );

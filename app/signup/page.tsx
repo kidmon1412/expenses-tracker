@@ -101,11 +101,6 @@ export default function SignupPage() {
           Log in
         </Link>
       </p>
-      <p className="text-center">
-        <Link href="/" className="text-sm text-neutral-500 hover:underline">
-          ← Continue viewing the demo
-        </Link>
-      </p>
     </main>
   );
 }

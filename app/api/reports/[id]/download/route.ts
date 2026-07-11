@@ -4,6 +4,7 @@ import { fetchReportData } from "@/lib/server/report-data";
 import { buildReportCsv } from "@/lib/server/report-csv";
 import { buildReportPdf } from "@/lib/server/report-pdf";
 import { canExport, getSubscriptionState } from "@/lib/server/subscription";
+import { getPreferredCurrency } from "@/lib/server/currency";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -28,10 +29,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 
   const summary = await fetchReportData(supabase, report.period_start, report.period_end);
+  const currency = await getPreferredCurrency();
   const filename = `expense-report-${report.period_start}-to-${report.period_end}.${report.format}`;
 
   if (report.format === "csv") {
-    const csv = buildReportCsv(summary);
+    const csv = buildReportCsv(summary, currency);
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
@@ -40,7 +42,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     });
   }
 
-  const pdfBuffer = await buildReportPdf(summary);
+  const pdfBuffer = await buildReportPdf(summary, currency);
   return new NextResponse(new Uint8Array(pdfBuffer), {
     headers: {
       "Content-Type": "application/pdf",

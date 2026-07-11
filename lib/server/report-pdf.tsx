@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
   headerText: { fontFamily: "Helvetica-Bold", fontSize: 9 },
 });
 
-function ReportDocument({ summary }: { summary: ReportSummary }) {
+function ReportDocument({ summary, currency }: { summary: ReportSummary; currency: string }) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -33,15 +33,15 @@ function ReportDocument({ summary }: { summary: ReportSummary }) {
         <View style={styles.summaryRow}>
           <View style={styles.summaryBox}>
             <Text style={styles.summaryLabel}>Total income</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(summary.totalIncome)}</Text>
+            <Text style={styles.summaryValue}>{formatCurrency(summary.totalIncome, currency)}</Text>
           </View>
           <View style={styles.summaryBox}>
             <Text style={styles.summaryLabel}>Total expense</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(summary.totalExpense)}</Text>
+            <Text style={styles.summaryValue}>{formatCurrency(summary.totalExpense, currency)}</Text>
           </View>
           <View style={styles.summaryBox}>
             <Text style={styles.summaryLabel}>Net</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(summary.net)}</Text>
+            <Text style={styles.summaryValue}>{formatCurrency(summary.net, currency)}</Text>
           </View>
         </View>
 
@@ -64,7 +64,7 @@ function ReportDocument({ summary }: { summary: ReportSummary }) {
               <Text style={styles.colCategory}>{row.category}</Text>
               <Text style={styles.colChannel}>{row.channel}</Text>
               <Text style={styles.colNote}>{row.note}</Text>
-              <Text style={styles.colAmount}>{formatCurrency(row.amount)}</Text>
+              <Text style={styles.colAmount}>{formatCurrency(row.amount, currency)}</Text>
             </View>
           ))
         )}
@@ -73,6 +73,6 @@ function ReportDocument({ summary }: { summary: ReportSummary }) {
   );
 }
 
-export async function buildReportPdf(summary: ReportSummary): Promise<Buffer> {
-  return renderToBuffer(<ReportDocument summary={summary} />);
+export async function buildReportPdf(summary: ReportSummary, currency: string): Promise<Buffer> {
+  return renderToBuffer(<ReportDocument summary={summary} currency={currency} />);
 }
